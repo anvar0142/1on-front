@@ -8,6 +8,7 @@ import {findIndexById} from "@/helper";
 const toast = useToast();
 
 const orders = ref(null);
+const editing = ref(false)
 const serviceList = ref([])
 const employeeList = ref([])
 const employeeSelect = ref(null)
@@ -58,17 +59,21 @@ const getOrderList = () => {
   axios.get(`http://api.1on.uz/api/organization/1/order`)
     .then(res => orders.value = res.data)
 }
-const getDropdowns = async () => {
-  await axios.get(`http://api.1on.uz/api/organization/1/service`)
-    .then(res => {
-      serviceList.value = res.data.map(item => ({name: item.name, code: item.id}))
-    })
-  await axios.get('http://api.1on.uz/api/organization/1/employee')
-    .then(res => {
-      employeeList.value = res.data.map(item => {
-        return {name: item.full_name, code: item.id}
+const getDropdowns = () => {
+  if (!serviceList.value.length) {
+    axios.get(`http://api.1on.uz/api/organization/1/service`)
+      .then(res => {
+        serviceList.value = res.data.map(item => ({name: item.name, code: item.id}))
       })
-    })
+  }
+  if (!employeeList.value.length) {
+    axios.get('http://api.1on.uz/api/organization/1/employee')
+      .then(res => {
+        employeeList.value = res.data.map(item => {
+          return {name: item.full_name, code: item.id}
+        })
+      })
+  }
 }
 
 const openNew = () => {
@@ -79,6 +84,7 @@ const openNew = () => {
 };
 
 const clearModal = () => {
+  editing.value = false
   order.value = {};
   serviceSelect.value = null
   calendarSelect.value = null
@@ -94,18 +100,21 @@ const hideDialog = () => {
   clearModal()
 };
 
-const saveOrder = () => {
-  submitted.value = true;
-
-  const date = new Date(calendarSelect.value)
+const formatDate = (initDate) => {
+  const date = new Date(initDate)
   const year = date.toLocaleString("default", { year: "numeric" });
   const month = date.toLocaleString("default", { month: "2-digit" });
   const day = date.toLocaleString("default", { day: "2-digit" });
-  const formattedDate = year + "-" + month + "-" + day;
+  return year + "-" + month + "-" + day;
+}
+
+const saveOrder = () => {
+  submitted.value = true;
+
   const data = {
-    employee_id: employeeSelect.code,
-    service_ids: [serviceSelect.code],
-    start_time: `${formattedDate} ${timeSelect.code}`,
+    employee_id: employeeSelect.value.code,
+    service_ids: [serviceSelect.value.code],
+    start_time: `${formatDate(calendarSelect.value)} ${timeSelect.value.code}`,
     client_info: {
       full_name: full_name.value || '',
       phone: phone.value
@@ -126,7 +135,8 @@ const saveOrder = () => {
 };
 
 const editOrderList = async (editOrderList) => {
-  await getDropdowns()
+  getDropdowns()
+  editing.value = true
   order.value = { ...editOrderList };
   const start_time = editOrderList.start_time.split(' ')
   calendarSelect.value = new Date(start_time[0])
@@ -143,8 +153,9 @@ const confirmDeleteOrder = (editOrderList) => {
   deleteOrderDialog.value = true;
 };
 
-const deleteOrder = () => {
-  order.value = order.value.filter((val) => val.id !== order.value.id);
+const deleteOrder = async () => {
+  await axios.delete(`http://api.1on.uz/api/organization/1/order/${order.value.id}`)
+  orders.value = orders.value.filter((val) => val.id !== order.value.id);
   deleteOrderDialog.value = false;
   order.value = {};
   toast.add({ severity: 'success', summary: 'Successful', detail: 'order Deleted', life: 3000 });
@@ -236,7 +247,13 @@ watch(phone, () => {
         </Column>
       </DataTable>
 
-      <Dialog v-model:visible="orderDialog" :style="{ width: '550px' }" header="Добавить заказ" :modal="true" class="p-fluid">
+      <Dialog
+        v-model:visible="orderDialog"
+        :style="{ width: '550px' }"
+        :header="editing ? 'Редактирование заказа' : 'Добавить заказ'"
+        :modal="true"
+        class="p-fluid"
+      >
         <div class="grid">
           <div class="field col-6">
             <label for="name">Имя</label>
@@ -249,31 +266,57 @@ watch(phone, () => {
             <label for="description">Номер телефона</label>
             <span class="p-input-icon-left">
               <i class="pi pi-phone" />
-              <InputText id="description" v-model.trim="phone" required="true" autofocus/>
+              <InputText
+                id="description"
+                placeholder="Номер телефона"
+                v-model.trim="phone"
+                required="true"
+                autofocus
+              />
             </span>
           </div>
           <hr class="col-12 p-0">
           <div class="field col-6">
             <label for="time">Услуги</label>
-            <Dropdown v-model="serviceSelect" :options="serviceList" optionLabel="name" empty-message="Ничего не найдено" placeholder="Выбрать услугу" />
+            <div class="p-inputgroup">
+              <span class="p-inputgroup-addon">
+                <i class="pi pi-tags"></i>
+              </span>
+              <Dropdown v-model="serviceSelect" :options="serviceList" optionLabel="name" empty-message="Ничего не найдено" placeholder="Выбрать услугу" />
+            </div>
           </div>
           <div class="field col-6">
             <label for="time">Исполнитель</label>
-            <Dropdown v-model="employeeSelect" :options="employeeList" optionLabel="name" empty-message="Ничего не найдено" placeholder="Выбрать исполнителя" />
+            <div class="p-inputgroup">
+              <span class="p-inputgroup-addon">
+                <i class="pi pi-user"></i>
+              </span>
+              <Dropdown v-model="employeeSelect" :options="employeeList" optionLabel="name" empty-message="Ничего не найдено" placeholder="Выбрать исполнителя" />
+            </div>
           </div>
           <hr class="col-12 p-0">
           <div class="field col-6">
             <label for="time">Дата брони</label>
-            <Calendar :showIcon="true" :showButtonBar="true" placeholder="Выбрать дату" v-model="calendarSelect"></Calendar>
+            <div class="p-inputgroup">
+              <span class="p-inputgroup-addon">
+                <i class="pi pi-calendar"></i>
+              </span>
+              <Calendar :showButtonBar="true" placeholder="Выбрать дату" v-model="calendarSelect"></Calendar>
+            </div>
           </div>
           <div class="field col-6">
             <label for="time">Время</label>
-            <Dropdown v-model="timeSelect" :options="timeList" optionLabel="name" empty-message="Ничего не найдено" placeholder="Выбрать время" />
+            <div class="p-inputgroup">
+              <span class="p-inputgroup-addon">
+                <i class="pi pi-calendar-times"></i>
+              </span>
+              <Dropdown v-model="timeSelect" :options="timeList" optionLabel="name" empty-message="Ничего не найдено" placeholder="Выбрать время" />
+            </div>
           </div>
         </div>
         <template #footer>
           <Button label="Отменить" icon="pi pi-times" outlined severity="secondary" @click="hideDialog" />
-          <Button label="Добавить услугу" icon="pi pi-check" @click="saveOrder" />
+          <Button :label="editing ? 'Сохранить услугу' : 'Добавить услугу'" icon="pi pi-check" @click="saveOrder" />
         </template>
       </Dialog>
 
