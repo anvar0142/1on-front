@@ -211,9 +211,11 @@ app.component('TreeTable', TreeTable);
 app.component('TriStateCheckbox', TriStateCheckbox);
 app.component('VirtualScroller', VirtualScroller);
 
-// axios.defaults.headers.common[
-//     "Authorization"
-//     ] = `Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vMTkyLjE2OC4xLjExL3B1YmxpYy9hcGkvYXV0aC9sb2dpbiIsImlhdCI6MTcxMDA0Nzg3OSwiZXhwIjoxNzEwMDUxNDc5LCJuYmYiOjE3MTAwNDc4NzksImp0aSI6ImtQOEpZNG1xYnRjVmttcWkiLCJzdWIiOiIxIiwicHJ2IjoiMmNjNmE2MTFiMTIwY2E5ZTFkM2IwYTM5MjJkYzNlZTVmMWVlODExOSJ9.V4lie1SP2-k6Sapbej07Qh5uDDlfZ0MCBb9NicSxKn0`;
+axios.interceptors.request.use(config => {
+  const token = localStorage.getItem("token");
+  config.headers["Authorization"] = `Bearer ${token}`;
+  return config;
+});
 
 axios.defaults.headers.common["X-Requested-With"] = "XMLHttpRequest"
 // axios.defaults.withCredentials = true;

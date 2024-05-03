@@ -2,8 +2,11 @@
 import AppBreadcrumb from './AppBreadcrumb.vue';
 import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { useLayout } from '@/layout/composables/layout';
+import {useAuthStore} from "@/store/auth";
 
 const { onMenuToggle, onProfileSidebarToggle, onConfigSidebarToggle } = useLayout();
+
+const { logout } = useAuthStore()
 
 const outsideClickListener = ref(null);
 const topbarMenuActive = ref(false);
@@ -62,7 +65,7 @@ const onConfigButtonClick = () => {
         <div class="topbar-end">
             <ul class="topbar-menu">
                 <li class="ml-3">
-                    <Button icon="pi pi-cog" text rounded severity="secondary" @click="onConfigButtonClick"></Button>
+                    <Button label="Log out" icon="pi pi-power-off" text rounded severity="secondary" @click="logout"></Button>
                 </li>
 <!--                <li class="topbar-profile">-->
 <!--                    <Button type="button" class="p-link" @click="showProfileSidebar"><img src="/demo/images/avatar/avatar.png" alt="Profile" /></Button>-->

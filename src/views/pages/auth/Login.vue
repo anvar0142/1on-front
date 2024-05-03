@@ -48,6 +48,7 @@ const signInWithGoogle = () => {
         scope: 'email profile openid',
         redirect_uri: authStore.REDIRECT_URI,
         callback: response => {
+          console.log(response)
           if (response.code)
             authStore.fetchUserData(response.code)
         },

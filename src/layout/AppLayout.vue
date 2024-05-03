@@ -91,7 +91,7 @@ const isOutsideClicked = (event) => {
         </div>
 
         <AppProfileSidebar />
-        <AppConfig />
+<!--        <AppConfig />-->
 
         <Toast></Toast>
         <div class="layout-mask"></div>
