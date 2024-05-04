@@ -13,6 +13,7 @@ const serviceDialog = ref(false);
 const deleteServiceDialog = ref(false);
 const deleteServicesDialog = ref(false);
 const service = ref({});
+const errorForm = ref(false)
 const selectedServices = ref(null);
 const dt = ref(null);
 const filters = ref({});
@@ -43,6 +44,11 @@ const hideDialog = () => {
 };
 
 const saveService = () => {
+  if (!service.value.name || !service.value.price || !service.value.time) {
+    errorForm.value = true;
+    return
+  }
+
   submitted.value = true;
   if (service.value.id) {
     axios.put(`http://localhost/public/api/organization/1/service/${service.value.id}`, service.value).then(() => {
@@ -148,6 +154,12 @@ const initFilters = () => {
             {{ slotProps.data.price }}
           </template>
         </Column>
+        <Column field="name" header="Время" :sortable="true" headerStyle="width:14%; min-width:10rem;">
+          <template #body="slotProps">
+            <span class="p-column-title">Время</span>
+            {{ slotProps.data.time }}
+          </template>
+        </Column>
         <Column headerStyle="min-width:10rem;">
           <template #body="slotProps">
             <Button icon="pi pi-pencil" class="mr-2" severity="success" rounded @click="editServiceList(slotProps.data)" />
@@ -169,7 +181,14 @@ const initFilters = () => {
           <label for="name">Название</label>
           <span class="p-input-icon-left">
             <i class="pi pi-exclamation-triangle" />
-            <InputText id="name" placeholder="Название" v-model.trim="service.name" required="true" autofocus/>
+            <InputText
+              input-id="name"
+              placeholder="Название"
+              v-model.trim="service.name"
+              required="true"
+              :class="errorForm && !service.name ? 'p-invalid' : ''"
+              autofocus
+            />
           </span>
         </div>
         <div class="grid">
@@ -177,14 +196,29 @@ const initFilters = () => {
             <label for="price">Цена</label>
             <span class="p-input-icon-left">
               <i class="pi pi-money-bill" />
-              <InputNumber input-class="pl-5" id="price" placeholder="Цена" v-model.trim="service.price" required="true"/>
+              <InputNumber
+                input-class="pl-5"
+                input-id="price"
+                placeholder="Цена"
+                v-model.trim="service.price"
+                required="true"
+                :class="errorForm && !service.price ? 'p-invalid' : ''"
+              />
             </span>
           </div>
           <div class="field col-6">
             <label for="time">Время</label>
             <span class="p-input-icon-left">
               <i class="pi pi-history" />
-              <InputNumber input-class="pl-5" id="time" placeholder="Время в минутах" v-model.trim="service.time" required="true"/>
+              <InputNumber
+                input-class="pl-5"
+                input-id="time"
+                placeholder="Время в минутах"
+                v-model.trim="service.time"
+                required="true"
+                :useGrouping="false"
+                :class="errorForm && !service.time ? 'p-invalid' : ''"
+              />
             </span>
           </div>
         </div>

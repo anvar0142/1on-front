@@ -3,7 +3,7 @@ import {ref, onMounted, onBeforeMount, watch, reactive} from 'vue';
 import { useToast } from 'primevue/usetoast';
 import { FilterMatchMode } from 'primevue/api';
 import axios from "axios";
-import {findIndexById} from "@/helper";
+import {findIndexById, formatDate} from "@/helper";
 
 const toast = useToast()
 
@@ -15,6 +15,8 @@ const editing = ref(false)
 const serviceList = ref([])
 const employeeList = ref([])
 
+const errorForm = ref(false)
+const phoneError = ref(false)
 const timeList = [
   {
     name: '12:00',
@@ -82,6 +84,8 @@ const openNew = () => {
 
 const clearModal = () => {
   editing.value = false
+  errorForm.value = false
+  phoneError.value = false
   selectedOrder.value = {}
   serviceSelect.value = null
   calendarSelect.value = null
@@ -97,6 +101,18 @@ const hideDialog = () => {
 };
 
 const saveOrder = () => {
+  let error = false
+  if (!serviceSelect.value || !employeeSelect.value || !calendarSelect.value || !timeSelect.value || !phone.value || !full_name.value) {
+    errorForm.value = true
+    error = true
+  }
+
+  phone.value = phone.value.replace(/\D/g, '')
+  if (phone.value.length !== 9) {
+    phoneError.value = 'Номер должен быть 9-значным'
+    error = true
+  }
+  if (error) return
 
   const data = {
     employee_id: employeeSelect.value.code,
@@ -170,14 +186,6 @@ const initFilters = () => {
     global: { value: null, matchMode: FilterMatchMode.CONTAINS }
   };
 };
-
-const formatDate = (initDate) => {
-  const date = new Date(initDate)
-  const year = date.toLocaleString("default", { year: "numeric" });
-  const month = date.toLocaleString("default", { month: "2-digit" });
-  const day = date.toLocaleString("default", { day: "2-digit" });
-  return year + "-" + month + "-" + day;
-}
 
 watch(phone, () => {
   if (!phone.value.length) return
@@ -262,22 +270,31 @@ watch(phone, () => {
             <label for="name">Имя</label>
             <span class="p-input-icon-left">
               <i class="pi pi-user" />
-              <InputText type="text" placeholder="Имя" v-model.trim="full_name" />
+              <InputText
+                input-id="name"
+                type="text"
+                placeholder="Имя"
+                v-model.trim="full_name"
+                :class="errorForm && !full_name ? 'p-invalid' : ''"
+              />
             </span>
           </div>
           <div class="field col-6">
-            <label for="description">Номер телефона</label>
+            <label for="phone">Номер телефона</label>
             <span class="p-input-icon-left">
               <i class="pi pi-phone" />
               <InputMask
-                id="description"
-                mask="99-999-99-99"
-                placeholder="99-999-99-99"
+                input-id="phone"
+                mask="(99) 999-99-99"
+                placeholder="(99) 999-99-99"
                 v-model.trim="phone"
                 required="true"
+                :class="errorForm && !phone ? 'p-invalid' : ''"
+                @update:model-value="phoneError = false"
                 autofocus
               />
             </span>
+            <small v-if="phoneError" class="p-error" id="username-help">{{phoneError}}</small>
           </div>
           <hr class="col-12 p-0">
           <div class="field col-6">
@@ -286,7 +303,14 @@ watch(phone, () => {
               <span class="p-inputgroup-addon">
                 <i class="pi pi-tags"></i>
               </span>
-              <Dropdown v-model="serviceSelect" :options="serviceList" optionLabel="name" empty-message="Ничего не найдено" placeholder="Выбрать услугу" />
+              <Dropdown
+                v-model="serviceSelect"
+                :options="serviceList"
+                optionLabel="name"
+                empty-message="Ничего не найдено"
+                placeholder="Выбрать услугу"
+                :class="errorForm && !serviceSelect ? 'p-invalid' : ''"
+              />
             </div>
           </div>
           <div class="field col-6">
@@ -295,7 +319,14 @@ watch(phone, () => {
               <span class="p-inputgroup-addon">
                 <i class="pi pi-user"></i>
               </span>
-              <Dropdown v-model="employeeSelect" :options="employeeList" optionLabel="name" empty-message="Ничего не найдено" placeholder="Выбрать исполнителя" />
+              <Dropdown
+                v-model="employeeSelect"
+                :options="employeeList"
+                optionLabel="name"
+                empty-message="Ничего не найдено"
+                placeholder="Выбрать исполнителя"
+                :class="errorForm && !employeeSelect ? 'p-invalid' : ''"
+              />
             </div>
           </div>
           <hr class="col-12 p-0">
@@ -305,7 +336,12 @@ watch(phone, () => {
               <span class="p-inputgroup-addon">
                 <i class="pi pi-calendar"></i>
               </span>
-              <Calendar :showButtonBar="true" placeholder="Выбрать дату" v-model="calendarSelect"></Calendar>
+              <Calendar
+                :showButtonBar="true"
+                placeholder="Выбрать дату"
+                v-model="calendarSelect"
+                :class="errorForm && !calendarSelect ? 'p-invalid' : ''"
+              />
             </div>
           </div>
           <div class="field col-6">
@@ -314,7 +350,14 @@ watch(phone, () => {
               <span class="p-inputgroup-addon">
                 <i class="pi pi-calendar-times"></i>
               </span>
-              <Dropdown v-model="timeSelect" :options="timeList" optionLabel="name" empty-message="Ничего не найдено" placeholder="Выбрать время" />
+              <Dropdown
+                v-model="timeSelect"
+                :options="timeList"
+                optionLabel="name"
+                empty-message="Ничего не найдено"
+                placeholder="Выбрать время"
+                :class="errorForm && !timeSelect ? 'p-invalid' : ''"
+              />
             </div>
           </div>
         </div>

@@ -17,7 +17,6 @@ export const useAuthStore = defineStore('auth', () => {
 
   const fetchUserData = async (code) => {
     try {
-      console.log(code)
       await axios.post(`http://localhost/public/api/auth/google`, {
         code,
         is_client: false,

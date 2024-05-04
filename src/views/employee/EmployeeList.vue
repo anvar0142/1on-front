@@ -3,7 +3,7 @@ import { ref, onMounted, onBeforeMount } from 'vue';
 import { useToast } from 'primevue/usetoast';
 import { FilterMatchMode } from 'primevue/api';
 import axios from "axios";
-import {findIndexById} from "@/helper";
+import {findIndexById, validateEmail} from "@/helper";
 
 const toast = useToast();
 
@@ -14,11 +14,11 @@ const deleteEmployeeDialog = ref(false);
 const deleteEmployeesDialog = ref(false);
 const employee = ref({});
 const errorForm = ref(false)
-const emailExist = ref(false)
+const emailError = ref(false)
+const phoneError = ref(false)
 const selectedEmployees = ref(null);
 const dt = ref(null);
 const filters = ref({});
-const submitted = ref(false);
 
 onBeforeMount(() => {
   initFilters();
@@ -34,26 +34,37 @@ const getEmployeeList = () => {
 
 const openNew = () => {
   employee.value = {};
-  submitted.value = false;
   employeeDialog.value = true;
 };
 
 const hideDialog = () => {
   employeeDialog.value = false;
-  emailExist.value = false;
+  emailError.value = false;
   errorForm.value = false;
   editing.value = false;
 };
 
 const saveEmployee = () => {
+  let error = false
 
   if (!employee.value.full_name || !employee.value.email || !employee.value.username || !employee.value.password) {
     errorForm.value = true
-    return;
+    error = true
   }
+  if (!validateEmail(employee.value.email)) {
+    emailError.value = 'Почта указано некорректно'
+    error = true
+  }
+
+  employee.value.phone = employee.value.phone.replace(/\D/g, '')
+  if (employee.value.phone.length !== 9) {
+    phoneError.value = 'Номер должен быть 9-значным'
+    error = true
+  }
+  if (error) return
+
   errorForm.value = false
 
-  submitted.value = true;
   if (employee.value.id) {
     axios.put(`http://localhost/public/api/organization/1/employee/${employee.value.id}`, employee.value).then(() => {
       getEmployeeList()
@@ -72,7 +83,7 @@ const saveEmployee = () => {
     }).catch(e => {
       console.log(e)
       if (e.response.status === 422) {
-        emailExist.value = true
+        emailError.value = 'Такая почта уже существует'
       }
     })
   }
@@ -80,7 +91,7 @@ const saveEmployee = () => {
 
 const editEmployee = (editEmployee) => {
   employee.value = { ...editEmployee };
-  editing.value = false
+  editing.value = true
   employeeDialog.value = true;
 };
 
@@ -166,6 +177,12 @@ const initFilters = () => {
             {{ slotProps.data.phone }}
           </template>
         </Column>
+        <Column field="name" header="Почта" :sortable="true" headerStyle="width:14%; min-width:10rem;">
+          <template #body="slotProps">
+            <span class="p-column-title">Почта</span>
+            {{ slotProps.data.email }}
+          </template>
+        </Column>
         <Column headerStyle="min-width:10rem;">
           <template #body="slotProps">
             <Button icon="pi pi-pencil" class="mr-2" severity="success" rounded @click="editEmployee(slotProps.data)" />
@@ -174,7 +191,13 @@ const initFilters = () => {
         </Column>
       </DataTable>
 
-      <Dialog v-model:visible="employeeDialog" :style="{ width: '550px' }" :header="editing ? 'Редактирование сотрудника' : 'Добавление сотрудника'" :modal="true" class="p-fluid">
+      <Dialog
+        v-model:visible="employeeDialog"
+        :style="{ width: '550px' }"
+        :header="editing ? 'Редактирование сотрудника' : 'Добавление сотрудника'"
+        :modal="true"
+        class="p-fluid"
+      >
 <!--        <img :src="'/demo/images/employee/' + employee.image" :alt="employee.image" v-if="employee.image" width="150" class="mt-0 mx-auto mb-5 block shadow-2" />-->
         <div class="grid">
           <div class="field col-6 pb-0">
@@ -196,13 +219,15 @@ const initFilters = () => {
               <i class="pi pi-phone" />
               <InputMask
                 input-id="phone"
-                mask="99-999-99-99"
-                placeholder="99-999-99-99"
+                mask="(99) 999-99-99"
+                placeholder="(99) 999-99-99"
                 v-model.trim="employee.phone"
                 required="true"
                 :class="errorForm && !employee.phone ? 'p-invalid' : ''"
+                @update:model-value="phoneError = false"
               />
             </span>
+            <small v-if="phoneError" class="p-error" id="username-help">{{phoneError}}</small>
           </div>
           <div class="field col-6 pb-0">
             <label for="email">Почта</label>
@@ -214,9 +239,10 @@ const initFilters = () => {
                 v-model.trim="employee.email"
                 required="true"
                 :class="errorForm && !employee.email ? 'p-invalid' : ''"
+                @update:model-value="emailError = false"
               />
-              <small v-if="emailExist" class="p-error" id="username-help">Такая почта уже существует</small>
             </span>
+            <small v-if="emailError" class="p-error" id="username-help">{{emailError}}</small>
           </div>
           <div class="field col-6 pb-0">
             <label for="username">Имя пользователя</label>

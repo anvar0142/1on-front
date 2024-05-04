@@ -26,7 +26,8 @@ const login = () => {
   try {
     axios.post('http://localhost/public/api/auth/login', {
       username: state.username,
-      password: state.password
+      password: state.password,
+      is_client: false,
     }).then(r => {
       const accessToken = r.data.access_token;
       authStore.setAccessToken(accessToken);
