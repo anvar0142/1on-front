@@ -8,6 +8,7 @@ import {findIndexById} from "@/helper";
 const toast = useToast();
 
 const services = ref(null);
+const editing = ref(false);
 const serviceDialog = ref(false);
 const deleteServiceDialog = ref(false);
 const deleteServicesDialog = ref(false);
@@ -36,6 +37,7 @@ const openNew = () => {
 };
 
 const hideDialog = () => {
+  editing.value = false
   serviceDialog.value = false;
   submitted.value = false;
 };
@@ -53,16 +55,18 @@ const saveService = () => {
   }
   toast.add({ severity: 'success', summary: 'Successful', detail: 'Product Created', life: 3000 });
   serviceDialog.value = false;
+  editing.value = false;
   service.value = {};
 };
 
 const editServiceList = (editServiceList) => {
   service.value = { ...editServiceList };
+  editing.value = true
   serviceDialog.value = true;
 };
 
-const confirmDeleteService = (editServiceList) => {
-  service.value = editServiceList;
+const confirmDeleteService = (selectedService) => {
+  service.value = selectedService;
   deleteServiceDialog.value = true;
 };
 
@@ -85,7 +89,7 @@ const confirmDeleteSelected = () => {
   deleteServicesDialog.value = true;
 };
 const deleteSelectedService = () => {
-  service.value = service.value.filter((val) => !selectedServices.value.includes(val));
+  services.value = services.value.filter((val) => !selectedServices.value.includes(val));
   deleteServicesDialog.value = false;
   selectedServices.value = null;
   toast.add({ severity: 'success', summary: 'Successful', detail: 'services Deleted', life: 3000 });
@@ -152,29 +156,51 @@ const initFilters = () => {
         </Column>
       </DataTable>
 
-      <Dialog v-model:visible="serviceDialog" :style="{ width: '450px' }" header="Добавить услугу" :modal="true" class="p-fluid">
+      <Dialog
+        v-model:visible="serviceDialog"
+        :style="{ width: '450px' }"
+        :header="editing ? 'Редактировать услугу' : 'Добавить услугу'"
+        :modal="true"
+        class="p-fluid"
+        :dismissableMask="true"
+      >
         <!--        <img :src="'/demo/images/service/' + service.image" :alt="service.image" v-if="service.image" width="150" class="mt-0 mx-auto mb-5 block shadow-2" />-->
         <div class="field">
           <label for="name">Название</label>
-          <InputText id="name" v-model.trim="service.name" required="true" autofocus/>
+          <span class="p-input-icon-left">
+            <i class="pi pi-exclamation-triangle" />
+            <InputText id="name" placeholder="Название" v-model.trim="service.name" required="true" autofocus/>
+          </span>
         </div>
         <div class="grid">
           <div class="field col-6">
-            <label for="description">Цена</label>
-            <InputText id="description" v-model.trim="service.price" required="true"/>
+            <label for="price">Цена</label>
+            <span class="p-input-icon-left">
+              <i class="pi pi-money-bill" />
+              <InputNumber input-class="pl-5" id="price" placeholder="Цена" v-model.trim="service.price" required="true"/>
+            </span>
           </div>
           <div class="field col-6">
             <label for="time">Время</label>
-            <InputText id="time" v-model.trim="service.time" required="true"/>
+            <span class="p-input-icon-left">
+              <i class="pi pi-history" />
+              <InputNumber input-class="pl-5" id="time" placeholder="Время в минутах" v-model.trim="service.time" required="true"/>
+            </span>
           </div>
         </div>
         <template #footer>
           <Button label="Отменить" icon="pi pi-times" outlined severity="secondary" @click="hideDialog" />
-          <Button label="Добавить услугу" icon="pi pi-check" @click="saveService" />
+          <Button :label="editing ? 'Сохранить услугу' : 'Добавить услугу'" icon="pi pi-check" @click="saveService" />
         </template>
       </Dialog>
 
-      <Dialog v-model:visible="deleteServiceDialog" :style="{ width: '450px' }" header="Confirm" :modal="true">
+      <Dialog
+        v-model:visible="deleteServiceDialog"
+        :style="{ width: '450px' }"
+        header="Confirm"
+        :modal="true"
+        :dismissableMask="true"
+      >
         <div class="flex align-items-center justify-content-center">
           <i class="pi pi-exclamation-triangle mr-3" style="font-size: 2rem" />
           <span v-if="service"
@@ -188,7 +214,13 @@ const initFilters = () => {
         </template>
       </Dialog>
 
-      <Dialog v-model:visible="deleteServicesDialog" :style="{ width: '450px' }" header="Confirm" :modal="true">
+      <Dialog
+        v-model:visible="deleteServicesDialog"
+        :style="{ width: '450px' }"
+        header="Confirm"
+        :modal="true"
+        :dismissableMask="true"
+      >
         <div class="flex align-items-center justify-content-center">
           <i class="pi pi-exclamation-triangle mr-3" style="font-size: 2rem" />
           <span v-if="service">Are you sure you want to delete the selected products?</span>

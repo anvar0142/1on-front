@@ -5,16 +5,16 @@ import { FilterMatchMode } from 'primevue/api';
 import axios from "axios";
 import {findIndexById} from "@/helper";
 
-const toast = useToast();
+const toast = useToast()
 
-const orders = ref(null);
+const orders = ref(null)
+const selectedOrder = ref(null)
+const orderDialog = ref(false)
 const editing = ref(false)
+
 const serviceList = ref([])
 const employeeList = ref([])
-const employeeSelect = ref(null)
-const serviceSelect = ref(null)
-const timeSelect = ref(null)
-const calendarSelect = ref(null)
+
 const timeList = [
   {
     name: '12:00',
@@ -39,14 +39,15 @@ const timeList = [
 ]
 const phone = ref('')
 const full_name = ref('')
-const orderDialog = ref(false);
-const deleteOrderDialog = ref(false);
-const deleteOrdersDialog = ref(false);
-const order = reactive({});
-const selectedOrder = ref(null);
-const dt = ref(null);
-const filters = ref({});
-const submitted = ref(false);
+const timeSelect = ref(null)
+const calendarSelect = ref(null)
+const employeeSelect = ref(null)
+const serviceSelect = ref(null)
+
+const deleteOrderDialog = ref(false)
+const deleteOrdersDialog = ref(false)
+const dt = ref(null)
+const filters = ref({})
 
 onBeforeMount(() => {
   initFilters();
@@ -59,6 +60,7 @@ const getOrderList = () => {
   axios.get(`http://localhost/public/api/organization/1/order`)
     .then(res => orders.value = res.data)
 }
+
 const getDropdowns = async () => {
   await axios.get(`http://localhost/public/api/organization/1/service`)
     .then(res => {
@@ -75,13 +77,12 @@ const getDropdowns = async () => {
 const openNew = () => {
   clearModal()
   getDropdowns()
-  submitted.value = false;
   orderDialog.value = true;
 };
 
 const clearModal = () => {
   editing.value = false
-  order.value = {};
+  selectedOrder.value = {}
   serviceSelect.value = null
   calendarSelect.value = null
   timeSelect.value = null
@@ -92,20 +93,10 @@ const clearModal = () => {
 
 const hideDialog = () => {
   orderDialog.value = false;
-  submitted.value = false;
   clearModal()
 };
 
-const formatDate = (initDate) => {
-  const date = new Date(initDate)
-  const year = date.toLocaleString("default", { year: "numeric" });
-  const month = date.toLocaleString("default", { month: "2-digit" });
-  const day = date.toLocaleString("default", { day: "2-digit" });
-  return year + "-" + month + "-" + day;
-}
-
 const saveOrder = () => {
-  submitted.value = true;
 
   const data = {
     employee_id: employeeSelect.value.code,
@@ -116,8 +107,8 @@ const saveOrder = () => {
       phone: phone.value
     }
   }
-  if (order.value.id) {
-    axios.put(`http://localhost/public/api/organization/1/order/${order.value.id}`, {...order.value, ...data}).then(() => {
+  if (selectedOrder.value.id) {
+    axios.put(`http://localhost/public/api/organization/1/order/${selectedOrder.value.id}`, {...selectedOrder.value, ...data}).then(() => {
       getOrderList()
     })
   } else {
@@ -133,7 +124,7 @@ const saveOrder = () => {
 const editOrderList = async (editOrderList) => {
   getDropdowns()
   editing.value = true
-  order.value = { ...editOrderList };
+  selectedOrder.value = { ...editOrderList };
   const start_time = editOrderList.start_time.split(' ')
   calendarSelect.value = new Date(start_time[0])
   timeSelect.value = timeList.find(item => item.code === start_time[1])
@@ -145,39 +136,48 @@ const editOrderList = async (editOrderList) => {
 };
 
 const confirmDeleteOrder = (editOrderList) => {
-  order.value = editOrderList;
+  selectedOrder.value = editOrderList
   deleteOrderDialog.value = true;
-};
-
-const deleteOrder = async () => {
-  deleteOrderDialog.value = false;
-
-  await axios.delete(`http://localhost/public/api/organization/1/order/${order.value.id}`)
-    .then(() => {
-      toast.add({ severity: 'success', detail: 'Заказ успешно удален', life: 3000 });
-      orders.value = orders.value.filter((val) => val.id !== order.value.id);
-    })
-    .catch(() => {
-      toast.add({ severity: 'error', summary: 'Ошибка!', detail: 'Что-то пошло не так', life: 3000 });
-    })
-
-  order.value = {};
 };
 
 const confirmDeleteSelected = () => {
   deleteOrdersDialog.value = true;
 };
 const deleteSelectOrder = () => {
-  order.value = order.value.filter((val) => !selectedOrder.value.includes(val));
+  orders.value = orders.value.filter((val) => !selectedOrder.value.includes(val));
   deleteOrdersDialog.value = false;
   selectedOrder.value = null;
   toast.add({ severity: 'success', summary: 'Successful', detail: 'orders Deleted', life: 3000 });
 };
+
+const deleteOrder = async () => {
+  deleteOrderDialog.value = false;
+
+  await axios.delete(`http://localhost/public/api/organization/1/order/${selectedOrder.value.id}`)
+    .then(() => {
+      toast.add({ severity: 'success', detail: 'Заказ успешно удален', life: 3000 });
+      orders.value = orders.value.filter((val) => val.id !== selectedOrder.value.id);
+    })
+    .catch(() => {
+      toast.add({ severity: 'error', summary: 'Ошибка!', detail: 'Что-то пошло не так', life: 3000 });
+    })
+
+  selectedOrder.value = {};
+};
+
 const initFilters = () => {
   filters.value = {
     global: { value: null, matchMode: FilterMatchMode.CONTAINS }
   };
 };
+
+const formatDate = (initDate) => {
+  const date = new Date(initDate)
+  const year = date.toLocaleString("default", { year: "numeric" });
+  const month = date.toLocaleString("default", { month: "2-digit" });
+  const day = date.toLocaleString("default", { day: "2-digit" });
+  return year + "-" + month + "-" + day;
+}
 
 watch(phone, () => {
   if (!phone.value.length) return
@@ -269,9 +269,10 @@ watch(phone, () => {
             <label for="description">Номер телефона</label>
             <span class="p-input-icon-left">
               <i class="pi pi-phone" />
-              <InputText
+              <InputMask
                 id="description"
-                placeholder="Номер телефона"
+                mask="99-999-99-99"
+                placeholder="99-999-99-99"
                 v-model.trim="phone"
                 required="true"
                 autofocus
