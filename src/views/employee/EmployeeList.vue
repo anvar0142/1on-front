@@ -25,7 +25,7 @@ onMounted(() => {
 });
 
 const getEmployeeList = () => {
-  axios.get(`http://api.1on.uz/api/organization/1/employee`)
+  axios.get(`http://localhost/public/api/organization/1/employee`)
       .then(res => employees.value = res.data)
 }
 
@@ -43,11 +43,11 @@ const hideDialog = () => {
 const saveEmployee = () => {
   submitted.value = true;
     if (employee.value.id) {
-      axios.put(`http://api.1on.uz/api/organization/1/employee/${employee.value.id}`, employee.value).then(() => {
+      axios.put(`http://localhost/public/api/organization/1/employee/${employee.value.id}`, employee.value).then(() => {
         getEmployeeList()
       })
     } else {
-      axios.post(`http://api.1on.uz/api/organization/1/employee`, employee.value).then(() => {
+      axios.post(`http://localhost/public/api/organization/1/employee`, employee.value).then(() => {
         getEmployeeList()
       })
     }

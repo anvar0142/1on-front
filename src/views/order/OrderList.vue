@@ -56,24 +56,20 @@ onMounted(() => {
 });
 
 const getOrderList = () => {
-  axios.get(`http://api.1on.uz/api/organization/1/order`)
+  axios.get(`http://localhost/public/api/organization/1/order`)
     .then(res => orders.value = res.data)
 }
-const getDropdowns = () => {
-  if (!serviceList.value.length) {
-    axios.get(`http://api.1on.uz/api/organization/1/service`)
-      .then(res => {
-        serviceList.value = res.data.map(item => ({name: item.name, code: item.id}))
+const getDropdowns = async () => {
+  await axios.get(`http://localhost/public/api/organization/1/service`)
+    .then(res => {
+      serviceList.value = res.data.map(item => ({name: item.name, code: item.id}))
+    })
+  await axios.get('http://localhost/public/api/organization/1/employee')
+    .then(res => {
+      employeeList.value = res.data.map(item => {
+        return {name: item.full_name, code: item.id}
       })
-  }
-  if (!employeeList.value.length) {
-    axios.get('http://api.1on.uz/api/organization/1/employee')
-      .then(res => {
-        employeeList.value = res.data.map(item => {
-          return {name: item.full_name, code: item.id}
-        })
-      })
-  }
+    })
 }
 
 const openNew = () => {
@@ -121,11 +117,11 @@ const saveOrder = () => {
     }
   }
   if (order.value.id) {
-    axios.put(`http://api.1on.uz/api/organization/1/order/${order.value.id}`, {...order.value, ...data}).then(() => {
+    axios.put(`http://localhost/public/api/organization/1/order/${order.value.id}`, {...order.value, ...data}).then(() => {
       getOrderList()
     })
   } else {
-    axios.post(`http://api.1on.uz/api/organization/1/order`, {...data, added_by: 1}).then(() => {
+    axios.post(`http://localhost/public/api/organization/1/order`, {...data, added_by: 1}).then(() => {
       getOrderList()
     })
   }

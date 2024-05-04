@@ -24,7 +24,7 @@ onMounted(() => {
 });
 
 const getClientList = () => {
-  axios.get(`http://api.1on.uz/api/organization/`)
+  axios.get(`http://localhost/public/api/organization/`)
       .then(res => clients.value = res.data)
 }
 
@@ -42,11 +42,11 @@ const hideDialog = () => {
 const saveClient = () => {
   submitted.value = true;
   if (client.value.id) {
-    axios.put(`http://api.1on.uz/api/organization/${client.value.id}`, client.value).then(() => {
+    axios.put(`http://localhost/public/api/organization/${client.value.id}`, client.value).then(() => {
       getClientList()
     })
   } else {
-    axios.post(`http://api.1on.uz/api/organization/`, client.value).then(() => {
+    axios.post(`http://localhost/public/api/organization/`, client.value).then(() => {
       getClientList()
     })
   }

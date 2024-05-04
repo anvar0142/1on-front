@@ -25,7 +25,7 @@ onMounted(() => {
 });
 
 const getServiceList = () => {
-  axios.get(`http://api.1on.uz/api/organization/1/service`)
+  axios.get(`http://localhost/public/api/organization/1/service`)
       .then(res => services.value = res.data)
 }
 
@@ -43,11 +43,11 @@ const hideDialog = () => {
 const saveService = () => {
   submitted.value = true;
   if (service.value.id) {
-    axios.put(`http://api.1on.uz/api/organization/1/service/${service.value.id}`, service.value).then(() => {
+    axios.put(`http://localhost/public/api/organization/1/service/${service.value.id}`, service.value).then(() => {
       getServiceList()
     })
   } else {
-    axios.post(`http://api.1on.uz/api/organization/1/service`, service.value).then(() => {
+    axios.post(`http://localhost/public/api/organization/1/service`, service.value).then(() => {
       getServiceList()
     })
   }
@@ -67,7 +67,8 @@ const confirmDeleteService = (editServiceList) => {
 };
 
 const deleteService = () => {
-  service.value = service.value.filter((val) => val.id !== service.value.id);
+  axios.delete(`http://localhost/public/api/organization/1/service/${service.value.id}`)
+  service.value = services.value.filter((val) => val.id !== service.value.id);
   deleteServiceDialog.value = false;
   service.value = {};
   toast.add({ severity: 'success', summary: 'Successful', detail: 'service Deleted', life: 3000 });
