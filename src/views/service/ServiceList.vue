@@ -66,12 +66,19 @@ const confirmDeleteService = (editServiceList) => {
   deleteServiceDialog.value = true;
 };
 
-const deleteService = () => {
-  axios.delete(`http://localhost/public/api/organization/1/service/${service.value.id}`)
-  service.value = services.value.filter((val) => val.id !== service.value.id);
+const deleteService = async () => {
   deleteServiceDialog.value = false;
+
+  await axios.delete(`http://localhost/public/api/organization/1/service/${service.value.id}`)
+    .then(() => {
+      toast.add({ severity: 'success', detail: 'Сотрудник успешно удален', life: 3000 });
+      services.value = services.value.filter((val) => val.id !== service.value.id);
+    })
+    .catch(() => {
+      toast.add({ severity: 'error', summary: 'Ошибка!', detail: 'Что-то пошло не так', life: 3000 });
+    })
+
   service.value = {};
-  toast.add({ severity: 'success', summary: 'Successful', detail: 'service Deleted', life: 3000 });
 };
 
 const confirmDeleteSelected = () => {

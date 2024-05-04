@@ -91,14 +91,6 @@ const initFilters = () => {
 <template>
   <div>
     <div class="card">
-      <Toolbar class="mb-4">
-        <template v-slot:end>
-          <div class="my-2">
-            <Button label="Удалить" icon="pi pi-trash" severity="danger" @click="confirmDeleteSelected" :disabled="!selectedClient || !selectedClient.length" />
-          </div>
-        </template>
-      </Toolbar>
-
       <DataTable
           ref="dt"
           :value="clients"

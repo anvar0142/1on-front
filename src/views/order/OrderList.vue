@@ -150,11 +150,18 @@ const confirmDeleteOrder = (editOrderList) => {
 };
 
 const deleteOrder = async () => {
-  await axios.delete(`http://api.1on.uz/api/organization/1/order/${order.value.id}`)
-  orders.value = orders.value.filter((val) => val.id !== order.value.id);
   deleteOrderDialog.value = false;
+
+  await axios.delete(`http://localhost/public/api/organization/1/order/${order.value.id}`)
+    .then(() => {
+      toast.add({ severity: 'success', detail: 'Заказ успешно удален', life: 3000 });
+      orders.value = orders.value.filter((val) => val.id !== order.value.id);
+    })
+    .catch(() => {
+      toast.add({ severity: 'error', summary: 'Ошибка!', detail: 'Что-то пошло не так', life: 3000 });
+    })
+
   order.value = {};
-  toast.add({ severity: 'success', summary: 'Successful', detail: 'order Deleted', life: 3000 });
 };
 
 const confirmDeleteSelected = () => {
@@ -174,7 +181,7 @@ const initFilters = () => {
 
 watch(phone, () => {
   if (!phone.value.length) return
-  axios.get(`http://api.1on.uz/api/organization/1/check-phone/${phone.value}`)
+  axios.get(`http://localhost/public/api/organization/1/check-phone/${phone.value}`)
     .then(res => {
       full_name.value = res.data.full_name
     })

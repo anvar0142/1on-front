@@ -66,11 +66,19 @@ const confirmDeleteEmployee = (editEmployee) => {
   deleteEmployeeDialog.value = true;
 };
 
-const deleteEmployee = () => {
-  employee.value = employee.value.filter((val) => val.id !== employee.value.id);
+const deleteEmployee = async () => {
   deleteEmployeeDialog.value = false;
+
+  await axios.delete(`http://localhost/public/api/organization/1/employee/${employee.value.id}`)
+    .then(() => {
+      toast.add({ severity: 'success', detail: 'Сотрудник успешно удален', life: 3000 });
+      employees.value = employees.value.filter((val) => val.id !== employee.value.id);
+    })
+    .catch(() => {
+      toast.add({ severity: 'error', summary: 'Ошибка!', detail: 'Что-то пошло не так', life: 3000 });
+    })
+
   employee.value = {};
-  toast.add({ severity: 'success', summary: 'Successful', detail: 'Employee Deleted', life: 3000 });
 };
 const confirmDeleteSelected = () => {
   deleteEmployeesDialog.value = true;
@@ -149,7 +157,7 @@ const initFilters = () => {
         </Column>
       </DataTable>
 
-      <Dialog v-model:visible="employeeDialog" :style="{ width: '450px' }" header="Product Details" :modal="true" class="p-fluid">
+      <Dialog v-model:visible="employeeDialog" :style="{ width: '450px' }" :header="editing ? 'Редактирование сотрудника' : 'Добавление сотрудника'" :modal="true" class="p-fluid">
 <!--        <img :src="'/demo/images/employee/' + employee.image" :alt="employee.image" v-if="employee.image" width="150" class="mt-0 mx-auto mb-5 block shadow-2" />-->
         <div class="field">
           <label for="name">Имя</label>
@@ -177,7 +185,7 @@ const initFilters = () => {
         </div>
         <template #footer>
           <Button label="Отменить" icon="pi pi-times" text="" @click="hideDialog" />
-          <Button label="Save" icon="pi pi-check" text="" @click="saveEmployee" />
+          <Button :label="editing ? 'Сохранить' : 'Добавить'" icon="pi pi-check" text="" @click="saveEmployee" />
         </template>
       </Dialog>
 
