@@ -8,13 +8,13 @@ export const useAuthStore = defineStore('auth', () => {
   const accessToken = ref(null)
   const userData = ref({})
   const CLIENT_ID = '816973990634-rbr4b66316n53kltqc0t5cd10t7a9osj.apps.googleusercontent.com'
-  const CLIENT_SECRET = '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'
   const REDIRECT_URI = 'http://localhost:5173'
 
   const setAccessToken = (token) => {
     accessToken.value = token;
     localStorage.setItem('token', token)
   }
+
   const fetchUserData = async (code) => {
     try {
       console.log(code)
@@ -33,6 +33,9 @@ export const useAuthStore = defineStore('auth', () => {
 
   const refreshToken = async () => {
     const { data } = await axios.post('http://localhost/public/api/auth/refresh', {is_client: false})
+      .catch(e => {
+        logout()
+      })
     setAccessToken(data.accessToken)
   }
 
@@ -46,12 +49,10 @@ export const useAuthStore = defineStore('auth', () => {
     userData,
     accessToken,
     CLIENT_ID,
-    CLIENT_SECRET,
     REDIRECT_URI,
     logout,
     setAccessToken,
     fetchUserData,
     refreshToken
   }
-
 });

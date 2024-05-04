@@ -223,21 +223,21 @@ axios.interceptors.request.use(config => {
   config.headers["Authorization"] = `Bearer ${token}`;
   return config;
 });
-// axios.interceptors.response.use(
-//   (response) => {
-//     return response;
-//   },
-//   async (error) => {
-//     const originalRequest = error.config;
-//     if (error.response.status === 401 && !originalRequest._retry) {
-//       originalRequest._retry = true;
-//       const newAccessToken = await refreshToken();
-//       originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
-//       return axios(originalRequest);
-//     }
-//     return Promise.reject(error);
-//   }
-// );
+axios.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  async (error) => {
+    const originalRequest = error.config;
+    if (error.response.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+      const newAccessToken = await refreshToken();
+      originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+      return axios(originalRequest);
+    }
+    return Promise.reject(error);
+  }
+);
 
 axios.defaults.headers.common["X-Requested-With"] = "XMLHttpRequest"
 // axios.defaults.withCredentials = true;

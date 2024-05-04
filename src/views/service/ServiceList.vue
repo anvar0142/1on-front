@@ -67,7 +67,8 @@ const confirmDeleteService = (editServiceList) => {
 };
 
 const deleteService = () => {
-  service.value = service.value.filter((val) => val.id !== service.value.id);
+  axios.delete(`http://localhost/public/api/organization/1/service/${service.value.id}`)
+  service.value = services.value.filter((val) => val.id !== service.value.id);
   deleteServiceDialog.value = false;
   service.value = {};
   toast.add({ severity: 'success', summary: 'Successful', detail: 'service Deleted', life: 3000 });
