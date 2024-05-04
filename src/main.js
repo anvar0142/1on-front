@@ -105,6 +105,7 @@ import VirtualScroller from 'primevue/virtualscroller';
 import '@/assets/styles.scss';
 import axios from "axios";
 import {createPinia} from "pinia";
+import {useAuthStore} from "@/store/auth";
 
 const app = createApp(App);
 
@@ -211,16 +212,34 @@ app.component('TreeTable', TreeTable);
 app.component('TriStateCheckbox', TriStateCheckbox);
 app.component('VirtualScroller', VirtualScroller);
 
+const pinia = createPinia()
+app.use(pinia)
+app.mount('#app');
+
+const { refreshToken } = useAuthStore()
+
 axios.interceptors.request.use(config => {
   const token = localStorage.getItem("token");
   config.headers["Authorization"] = `Bearer ${token}`;
   return config;
 });
+// axios.interceptors.response.use(
+//   (response) => {
+//     return response;
+//   },
+//   async (error) => {
+//     const originalRequest = error.config;
+//     if (error.response.status === 401 && !originalRequest._retry) {
+//       originalRequest._retry = true;
+//       const newAccessToken = await refreshToken();
+//       originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+//       return axios(originalRequest);
+//     }
+//     return Promise.reject(error);
+//   }
+// );
 
 axios.defaults.headers.common["X-Requested-With"] = "XMLHttpRequest"
 // axios.defaults.withCredentials = true;
 
-
-const pinia = createPinia()
-app.use(pinia)
-app.mount('#app');
+// refreshToken()

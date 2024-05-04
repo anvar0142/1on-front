@@ -19,8 +19,7 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       console.log(code)
       await axios.post(`http://localhost/public/api/auth/google`, {
-        email: 'mhoja9494@gmail.com',
-        name: code,
+        code,
         is_client: false,
       }).then(({data}) => {
         setAccessToken(data.access_token)
@@ -32,9 +31,15 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  const refreshToken = async () => {
+    const { data } = await axios.post('http://localhost/public/api/auth/refresh', {is_client: false})
+    setAccessToken(data.accessToken)
+  }
+
   const logout = () => {
     axios.post('http://localhost/public/api/auth/logout', {is_client: false})
     localStorage.removeItem('token')
+    router.push({name: 'login'})
   }
 
   return {
@@ -45,7 +50,8 @@ export const useAuthStore = defineStore('auth', () => {
     REDIRECT_URI,
     logout,
     setAccessToken,
-    fetchUserData
+    fetchUserData,
+    refreshToken
   }
 
 });
